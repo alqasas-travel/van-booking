@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16323a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="حجز المشاوير">
+<title>حجز المشاوير</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1ec;--ink:#16323a;--mute:#5d7178;--free:#ffffff;--freeb:#9db3b8;--sel:#e8a317;--taken:#16323a;--line:#d3dcda;--danger:#b3372b;--ok:#2b7a55}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+[hidden]{display:none!important}
+button,input{font:inherit}
+.top{position:sticky;top:0;background:var(--ink);color:#fff;padding:10px 14px;display:flex;gap:10px;align-items:center;z-index:5}
+.top h1{font-size:18px;margin:0;flex:1;font-weight:800}
+.top input[type=date]{border:0;border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink)}
+.top button{background:none;border:1px solid #ffffff55;color:#fff;border-radius:8px;padding:6px 10px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 14px}
+.tab{flex:none;border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;text-align:center;min-width:84px}
+.tab b{display:block;font-size:16px}
+.tab small{color:var(--mute)}
+.tab.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.tab.on small{color:#c9d6d9}
+.tab.add{border-style:dashed;color:var(--mute);background:none}
+.van{margin:6px auto 0;max-width:340px;padding:18px 20px 22px;background:#dfe6e2;border-radius:34px 34px 22px 22px;border:3px solid var(--ink)}
+.grid{direction:ltr;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.seat{aspect-ratio:1;border-radius:14px 14px 8px 8px;border:2px solid var(--freeb);background:var(--free);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--ink);padding:0}
+.seat small{font-size:10px;font-weight:600;direction:ltr;line-height:1.1}
+.seat.sel{background:var(--sel);border-color:var(--sel)}
+.seat.taken{background:var(--taken);border-color:var(--taken);color:#fff}
+.drv{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);border:2px dashed var(--freeb);border-radius:50%;aspect-ratio:1}
+.bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-bottom));margin-top:16px;display:flex;gap:10px;align-items:center}
+.bar input{flex:1;min-width:0;padding:12px;border:2px solid var(--line);border-radius:10px;direction:ltr;text-align:right;font-size:18px}
+.btn{border:0;background:var(--ok);color:#fff;font-weight:800;border-radius:10px;padding:12px 18px}
+.btn:disabled{background:#b8c4c6}
+.btn.red{background:var(--danger)}
+.info{text-align:center;color:var(--mute);font-size:14px;margin:10px 14px 0}
+.empty{text-align:center;padding:40px 20px;color:var(--mute)}
+#login{max-width:340px;margin:12vh auto;padding:0 20px}
+#login h1{font-size:26px;margin:0 0 4px}
+#login input{width:100%;padding:12px;margin:8px 0;border:2px solid var(--line);border-radius:10px;direction:ltr;text-align:left}
+#login .btn{width:100%;margin-top:6px}
+.err{color:var(--danger);font-size:14px;min-height:20px}
+.dlg{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.dlg>div{background:#fff;width:100%;max-width:420px;border-radius:18px 18px 0 0;padding:20px;text-align:center}
+.dlg p{font-size:18px;margin:0 0 6px}
+.dlg .ph{font-size:24px;font-weight:800;direction:ltr;margin-bottom:14px}
+.dlg .row{display:flex;gap:10px}.dlg .row button{flex:1}
+.dlg .row .btn:first-child{background:#e3e9e7;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<div id="login" hidden>
+  <h1>حجز المشاوير</h1>
+  <p style="color:var(--mute);margin:0 0 14px">سجّل دخولك بحساب الموظفين</p>
+  <input id="em" type="email" placeholder="البريد الإلكتروني" autocomplete="username">
+  <input id="pw" type="password" placeholder="كلمة السر" autocomplete="current-password">
+  <div class="err" id="lerr"></div>
+  <button class="btn" id="lbtn">دخول</button>
+</div>
+
+<div id="app" hidden>
+  <div class="top">
+    <h1>حجز المشاوير</h1>
+    <input type="date" id="date">
+    <button id="out">خروج</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="main"></div>
+  <div class="bar" id="bar" hidden>
+    <input id="phone" type="tel" inputmode="tel" placeholder="رقم تليفون الراكب">
+    <button class="btn" id="book" disabled>احجز</button>
+  </div>
+</div>
+
+<div class="dlg" id="dlg" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+// ====== الصق هنا إعدادات Firebase بتاعتك ======
+const firebaseConfig = {
+  apiKey: "AIzaSyC7S2CS_B-euNiW1vyBBVgI1uHFAz4H5yU",
+  authDomain: "alqasas-travel.firebaseapp.com",
+  databaseURL: "https://alqasas-travel-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "alqasas-travel",
+  storageBucket: "alqasas-travel.firebasestorage.app",
+  messagingSenderId: "866747292985",
+  appId: "1:866747292985:web:99eb9618fc4bc9c4a09ce8"
+};
+// ==============================================
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.database();
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, '0');
+const t = new Date();
+let date = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+let van = null, vans = {}, bookings = {}, sel = new Set(), refB = null, started = false;
+
+// ترتيب الكراسي: الصف الأول = السواق + كرسيين بجانبه، بعدها 4 صفوف × 3
+const ROWS = [['D',1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14]];
+const TOTAL = 14;
+
+$('date').value = date;
+$('date').onchange = e => { if (e.target.value) { date = e.target.value; sel.clear(); listen(); } };
+
+// ---- تسجيل الدخول ----
+$('lbtn').onclick = async () => {
+  $('lerr').textContent = '';
+  try { await auth.signInWithEmailAndPassword($('em').value.trim(), $('pw').value); }
+  catch (e) { $('lerr').textContent = 'البريد أو كلمة السر غلط'; }
+};
+$('out').onclick = () => auth.signOut();
+auth.onAuthStateChanged(u => {
+  $('login').hidden = !!u; $('app').hidden = !u;
+  if (u && !started) { started = true; start(); }
+});
+
+function start() {
+  db.ref('vans').on('value', s => {
+    vans = s.val() || {};
+    if (!van || !vans[van]) van = Object.keys(vans)[0] || null;
+    sel.clear(); render();
+  });
+  listen();
+}
+function listen() {
+  if (refB) refB.off();
+  refB = db.ref('bookings/' + date);
+  refB.on('value', s => { bookings = s.val() || {}; drop(); render(); });
+}
+// لو كرسي اتحجز من تليفون تاني وانت كنت مختاره
+function drop() { const b = bookings[van] || {}; sel.forEach(n => { if (b[n]) sel.delete(n); }); }
+
+// ---- الرسم ----
+function render() {
+  const ids = Object.keys(vans);
+  $('tabs').innerHTML = ids.map(id => {
+    const free = TOTAL - Object.keys(bookings[id] || {}).length;
+    return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vans[id])}</b><small>فاضي ${free}</small></button>`;
+  }).join('') + `<button class="tab add" id="addv"><b>+</b><small>عربية</small></button>`;
+  document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; sel.clear(); render(); });
+  $('addv').onclick = addVan;
+
+  if (!van) {
+    $('main').innerHTML = `<div class="empty">مفيش عربيات لسه.<br>دوس على + وضيف أول عربية.</div>`;
+    $('bar').hidden = true; return;
+  }
+  const b = bookings[van] || {};
+  let h = `<div class="van"><div class="grid">`;
+  ROWS.flat().forEach(n => {
+    if (n === 'D') { h += `<div class="drv">السواق</div>`; return; }
+    const tk = b[n];
+    h += `<button class="seat ${tk?'taken':''} ${sel.has(n)?'sel':''}" data-s="${n}">${n}${tk?`<small>${esc(tk.phone.slice(-4))}</small>`:''}</button>`;
+  });
+  h += `</div></div>
+  <p class="info">${sel.size ? 'مختار: ' + [...sel].sort((a,b)=>a-b).join('، ') : 'دوس على الكرسي الفاضي عشان تحجزه'}</p>
+  <p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="delv">مسح العربية دي</button></p>`;
+  $('main').innerHTML = h;
+  document.querySelectorAll('.seat').forEach(el => el.onclick = () => tapSeat(+el.dataset.s));
+  $('delv').onclick = delVan;
+  $('bar').hidden = false;
+  $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8);
+}
+$('phone').oninput = () => $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8);
+
+function tapSeat(n) {
+  const tk = (bookings[van] || {})[n];
+  if (tk) return askCancel(n, tk.phone);
+  sel.has(n) ? sel.delete(n) : sel.add(n);
+  render();
+}
+
+// ---- الحجز (transaction عشان محدش يحجز نفس الكرسي مرتين) ----
+$('book').onclick = async () => {
+  const phone = $('phone').value.replace(/\s/g, '');
+  const seats = [...sel], failed = [];
+  $('book').disabled = true;
+  for (const n of seats) {
+    try {
+      const r = await db.ref(`bookings/${date}/${van}/${n}`).transaction(cur =>
+        cur ? undefined : { phone, at: firebase.database.ServerValue.TIMESTAMP });
+      if (!r.committed) failed.push(n);
+    } catch (e) { failed.push(n); }
+  }
+  sel.clear(); $('phone').value = '';
+  render();
+  if (failed.length) alert('الكراسي دي اتحجزت قبلك من تليفون تاني: ' + failed.join('، '));
+};
+
+// ---- إلغاء حجز ----
+function askCancel(n, phone) {
+  const d = $('dlg');
+  d.innerHTML = `<div><p>كرسي ${n} محجوز لـ</p><div class="ph">${esc(phone)}</div>
+    <div class="row"><button class="btn" id="no">رجوع</button><button class="btn red" id="yes">إلغاء الحجز</button></div></div>`;
+  d.hidden = false;
+  $('no').onclick = () => d.hidden = true;
+  $('yes').onclick = async () => { d.hidden = true; await db.ref(`bookings/${date}/${van}/${n}`).remove(); };
+}
+
+// ---- العربيات ----
+function addVan() {
+  const name = prompt('اسم أو رقم العربية (مثال: عربية 1)');
+  if (name && name.trim()) db.ref('vans').push(name.trim());
+}
+function delVan() {
+  if (confirm('تمسح ' + vans[van] + ' وكل حجوزاتها؟')) {
+    const id = van; van = null;
+    db.ref('vans/' + id).remove();
+    db.ref('bookings').once('value', s => s.forEach(day => { day.child(id).ref.remove(); }));
+  }
+}
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
