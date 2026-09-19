@@ -116,8 +116,8 @@ $('date').onchange = e => { if (e.target.value) { date = e.target.value; sel.cle
 // ---- تسجيل الدخول ----
 $('lbtn').onclick = async () => {
   $('lerr').textContent = '';
-  try { await auth.signInWithEmailAndPassword($('em').value.trim(), $('pw').value); }
-  catch (e) { $('lerr').textContent = 'البريد أو كلمة السر غلط'; }
+  try { await auth.signInWithEmailAndPassword($('em').value.trim().toLowerCase(), $('pw').value); }
+  catch (e) { $('lerr').textContent = 'خطأ في الدخول: ' + (e.code || e.message); }
 };
 $('out').onclick = () => auth.signOut();
 auth.onAuthStateChanged(u => {
