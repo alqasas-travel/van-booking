@@ -30,11 +30,16 @@ button,input{font:inherit}
 .tab.add{border-style:dashed;color:var(--mute);background:none}
 .van{margin:6px auto 0;max-width:340px;padding:18px 20px 22px;background:#dfe6e2;border-radius:34px 34px 22px 22px;border:3px solid var(--ink)}
 .grid{direction:ltr;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.seat{aspect-ratio:1;border-radius:14px 14px 8px 8px;border:2px solid var(--freeb);background:var(--free);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:var(--ink);padding:0}
-.seat small{font-size:10px;font-weight:600;direction:ltr;line-height:1.1}
-.seat.sel{background:var(--sel);border-color:var(--sel)}
-.seat.taken{background:var(--taken);border-color:var(--taken);color:#fff}
-.drv{display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);border:2px dashed var(--freeb);border-radius:50%;aspect-ratio:1}
+.seat{position:relative;aspect-ratio:1;border:0;background:none;padding:0;color:var(--ink);font-weight:800;font-size:19px}
+.seat svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.seat .bk,.seat .cu,.seat .ar{fill:var(--free);stroke:var(--freeb);stroke-width:2.5}
+.seat.sel .bk,.seat.sel .cu,.seat.sel .ar{fill:var(--sel);stroke:#b97f00}
+.seat.taken .bk,.seat.taken .cu,.seat.taken .ar{fill:var(--taken);stroke:#0b1c21}
+.seat.taken{color:#fff}
+.seat .n{position:absolute;left:0;right:0;top:12%;display:flex;flex-direction:column;align-items:center;line-height:1}
+.seat small{font-size:10px;font-weight:600;direction:ltr;margin-top:3px}
+.drv{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mute);font-size:11px;gap:2px}
+.drv svg{width:62%}
 .bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-bottom));margin-top:16px;display:flex;gap:10px;align-items:center}
 .bar input{flex:1;min-width:0;padding:12px;border:2px solid var(--line);border-radius:10px;direction:ltr;text-align:right;font-size:18px}
 .btn{border:0;background:var(--ok);color:#fff;font-weight:800;border-radius:10px;padding:12px 18px}
@@ -53,6 +58,12 @@ button,input{font:inherit}
 .dlg .ph{font-size:24px;font-weight:800;direction:ltr;margin-bottom:14px}
 .dlg .row{display:flex;gap:10px}.dlg .row button{flex:1}
 .dlg .row .btn:first-child{background:#e3e9e7;color:var(--ink)}
+.dlg input{width:100%;padding:12px;margin:6px 0;border:2px solid var(--line);border-radius:10px}
+.stack{display:grid;gap:10px}
+a.btn{display:block;text-decoration:none;text-align:center}
+.btn.wa{background:#1f9d55}
+.vinfo{text-align:center;font-size:15px;margin:12px 14px 0}
+.vinfo button{border:0;background:none;color:var(--ink);text-decoration:underline;font-size:14px}
 </style>
 </head>
 <body>
@@ -109,6 +120,10 @@ let van = null, vans = {}, bookings = {}, sel = new Set(), refB = null, started 
 // ترتيب الكراسي: الصف الأول = السواق + كرسيين بجانبه، بعدها 4 صفوف × 3
 const ROWS = [['D',1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14]];
 const TOTAL = 14;
+const SEAT = '<svg viewBox="0 0 64 64"><rect class="ar" x="2" y="26" width="11" height="30" rx="5"/><rect class="ar" x="51" y="26" width="11" height="30" rx="5"/><rect class="bk" x="10" y="3" width="44" height="38" rx="14"/><rect class="cu" x="8" y="36" width="48" height="22" rx="9"/></svg>';
+const WHEEL = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4"><circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="5" fill="currentColor"/><path d="M10 32h17M37 32h17M32 37v19"/></svg>';
+const vo = id => { const v = vans[id]; return (v && typeof v === 'object') ? v : { name: v || '' };};
+const intl = p => { let d = String(p).replace(/\D/g,''); if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '20' + d.slice(1); return d; };
 
 $('date').value = date;
 $('date').onchange = e => { if (e.target.value) { date = e.target.value; sel.clear(); listen(); } };
@@ -146,10 +161,10 @@ function render() {
   const ids = Object.keys(vans);
   $('tabs').innerHTML = ids.map(id => {
     const free = TOTAL - Object.keys(bookings[id] || {}).length;
-    return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vans[id])}</b><small>فاضي ${free}</small></button>`;
+    return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vo(id).name)}</b><small>${vo(id).time?esc(vo(id).time)+' · ':''}فاضي ${free}</small></button>`;
   }).join('') + `<button class="tab add" id="addv"><b>+</b><small>عربية</small></button>`;
   document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; sel.clear(); render(); });
-  $('addv').onclick = addVan;
+  $('addv').onclick = () => vanForm();
 
   if (!van) {
     $('main').innerHTML = `<div class="empty">مفيش عربيات لسه.<br>دوس على + وضيف أول عربية.</div>`;
@@ -158,16 +173,18 @@ function render() {
   const b = bookings[van] || {};
   let h = `<div class="van"><div class="grid">`;
   ROWS.flat().forEach(n => {
-    if (n === 'D') { h += `<div class="drv">السواق</div>`; return; }
+    if (n === 'D') { h += `<div class="drv">${WHEEL}السواق</div>`; return; }
     const tk = b[n];
-    h += `<button class="seat ${tk?'taken':''} ${sel.has(n)?'sel':''}" data-s="${n}">${n}${tk?`<small>${esc(tk.phone.slice(-4))}</small>`:''}</button>`;
+    h += `<button class="seat ${tk?'taken':''} ${sel.has(n)?'sel':''}" data-s="${n}">${SEAT}<span class="n">${n}${tk?`<small>${esc(tk.phone.slice(-4))}</small>`:''}</span></button>`;
   });
   h += `</div></div>
   <p class="info">${sel.size ? 'مختار: ' + [...sel].sort((a,b)=>a-b).join('، ') : 'دوس على الكرسي الفاضي عشان تحجزه'}</p>
+  <p class="vinfo">${vo(van).time?'الميعاد: <b>'+esc(vo(van).time)+'</b>':''}${vo(van).time&&vo(van).driver?' · ':''}${vo(van).driver?'السواق: <b>'+esc(vo(van).driver)+'</b>':''}<br><button id="editv">تعديل بيانات العربية</button></p>
   <p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="delv">مسح العربية دي</button></p>`;
   $('main').innerHTML = h;
   document.querySelectorAll('.seat').forEach(el => el.onclick = () => tapSeat(+el.dataset.s));
   $('delv').onclick = delVan;
+  $('editv').onclick = () => vanForm(van);
   $('bar').hidden = false;
   $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8);
 }
@@ -194,7 +211,9 @@ $('book').onclick = async () => {
   }
   sel.clear(); $('phone').value = '';
   render();
+  const ok = seats.filter(n => !failed.includes(n));
   if (failed.length) alert('الكراسي دي اتحجزت قبلك من تليفون تاني: ' + failed.join('، '));
+  if (ok.length) showDone(phone, ok);
 };
 
 // ---- إلغاء حجز ----
@@ -208,12 +227,39 @@ function askCancel(n, phone) {
 }
 
 // ---- العربيات ----
-function addVan() {
-  const name = prompt('اسم أو رقم العربية (مثال: عربية 1)');
-  if (name && name.trim()) db.ref('vans').push(name.trim());
+function vanForm(id) {
+  const v = id ? vo(id) : {};
+  const d = $('dlg');
+  d.innerHTML = `<div><p>${id ? 'تعديل العربية' : 'عربية جديدة'}</p>
+    <input id="f-name" placeholder="اسم أو رقم العربية" value="${esc(v.name || '')}">
+    <input id="f-time" placeholder="الميعاد (مثال: 7:30 ص)" value="${esc(v.time || '')}">
+    <input id="f-driver" placeholder="اسم السواق" value="${esc(v.driver || '')}">
+    <input id="f-dphone" type="tel" inputmode="tel" placeholder="تليفون السواق (اختياري)" value="${esc(v.driverPhone || '')}">
+    <div class="row" style="margin-top:10px"><button class="btn" id="f-no">رجوع</button><button class="btn" id="f-ok">حفظ</button></div></div>`;
+  d.hidden = false;
+  $('f-no').onclick = () => d.hidden = true;
+  $('f-ok').onclick = async () => {
+    const name = $('f-name').value.trim(); if (!name) return;
+    const obj = { name, time: $('f-time').value.trim(), driver: $('f-driver').value.trim(), driverPhone: $('f-dphone').value.trim() };
+    d.hidden = true;
+    if (id) await db.ref('vans/' + id).set(obj); else db.ref('vans').push(obj);
+  };
+}
+function showDone(phone, seats) {
+  const v = vo(van), list = seats.sort((a, b) => a - b).join('، '), w = seats.length > 1 ? 'الكراسي' : 'الكرسي';
+  const msg = `تم حجز ${w} رقم ${list} في ${v.name} بتاريخ ${date}${v.time ? ' الساعة ' + v.time : ''}${v.driver ? ' - السواق: ' + v.driver : ''}`;
+  const dmsg = `حجز جديد - ${v.name} - ${date}${v.time ? ' ' + v.time : ''} - ${w} ${list} - تليفون الراكب ${phone}`;
+  const wa = (n, m) => `https://wa.me/${intl(n)}?text=${encodeURIComponent(m)}`;
+  const d = $('dlg');
+  d.innerHTML = `<div><p>تم الحجز ✅</p><div class="ph">${esc(phone)}</div><div class="stack">
+    <a class="btn wa" target="_blank" rel="noopener" href="${wa(phone, msg)}">إرسال تأكيد للراكب (واتساب)</a>
+    ${v.driverPhone ? `<a class="btn wa" target="_blank" rel="noopener" href="${wa(v.driverPhone, dmsg)}">إبلاغ السواق (واتساب)</a>` : ''}
+    <button class="btn" id="dn" style="background:#e3e9e7;color:var(--ink)">تم</button></div></div>`;
+  d.hidden = false;
+  $('dn').onclick = () => d.hidden = true;
 }
 function delVan() {
-  if (confirm('تمسح ' + vans[van] + ' وكل حجوزاتها؟')) {
+  if (confirm('تمسح ' + vo(van).name + ' وكل حجوزاتها؟')) {
     const id = van; van = null;
     db.ref('vans/' + id).remove();
     db.ref('bookings').once('value', s => s.forEach(day => { day.child(id).ref.remove(); }));
