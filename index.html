@@ -272,8 +272,6 @@ function showDone(phone, seats) {
   const d = $('dlg');
   d.innerHTML = `<div><p>تم الحجز ✅</p><div class="ph">${esc(phone)}</div><div class="stack">
     ${v.ownerPhone ? `<a class="btn wa" target="_blank" rel="noopener" href="${wa(v.ownerPhone, dmsg)}">إبلاغ صاحب العربية (واتساب)</a><a class="btn" style="background:#3b6f86" href="${sms(v.ownerPhone, dmsg)}">إبلاغ صاحب العربية (رسالة SMS)</a>` : `<p style="font-size:14px;color:var(--mute);margin:0">ضيف تليفون صاحب العربية من "تعديل بيانات العربية" عشان يوصله كل حجز.</p>`}
-    <a class="btn wa" target="_blank" rel="noopener" href="${wa(phone, msg)}">إرسال تأكيد للراكب (واتساب)</a>
-    ${v.driverPhone ? `<a class="btn wa" target="_blank" rel="noopener" href="${wa(v.driverPhone, dmsg)}">إبلاغ السواق (واتساب)</a>` : ''}
     <button class="btn" id="dn" style="background:#e3e9e7;color:var(--ink)">تم</button></div></div>`;
   d.hidden = false;
   $('dn').onclick = () => d.hidden = true;
