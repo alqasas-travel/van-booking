@@ -21,6 +21,12 @@ button,input{font:inherit}
 .top h1{font-size:18px;margin:0;flex:1;font-weight:800}
 .top input[type=date]{border:0;border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink)}
 .top button{background:none;border:1px solid #ffffff55;color:#fff;border-radius:8px;padding:6px 10px}
+.days{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px}
+.day{flex:none;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;text-align:center;min-width:52px;color:var(--ink)}
+.day b{display:block;font-size:13px}
+.day small{font-size:10px;color:var(--mute)}
+.day.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.day.on small{color:#c9d6d9}
 .tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 14px}
 .tab{flex:none;border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 14px;text-align:center;min-width:84px}
 .tab b{display:block;font-size:16px}
@@ -99,6 +105,7 @@ a.btn{display:block;text-decoration:none;text-align:center}
     <input type="date" id="date">
     <button id="out">خروج</button>
   </div>
+  <div class="days" id="days"></div>
   <div class="tabs" id="tabs"></div>
   <div id="main"></div>
   <div class="bar" id="bar" hidden>
@@ -131,7 +138,7 @@ const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 const t = new Date();
 let date = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
-let van = null, vans = {}, bookings = {}, sel = new Set(), refB = null, started = false;
+let van = null, vans = {}, bookings = {}, sel = new Set(), refB = null, started = false, isDriver = false;
 
 // ترتيب الكراسي: الصف الأول = السواق + كرسيين بجانبه، بعدها 4 صفوف × 3
 const ROWS = [['D',1,2],[3,4,5],[6,7,8],[9,10,11],[12,13,14]];
@@ -143,8 +150,24 @@ const WHEEL = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke
 const vo = id => { const v = vans[id]; return (v && typeof v === 'object') ? v : { name: v || '' };};
 const intl = p => { let d = String(p).replace(/\D/g,''); if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '20' + d.slice(1); return d; };
 
+const DOW = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function ymd(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function renderDays() {
+  let h = '';
+  for (let i = 0; i < 10; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    const val = ymd(d);
+    const label = i === 0 ? 'النهارده' : i === 1 ? 'بكرة' : DOW[d.getDay()];
+    h += `<button class="day ${val===date?'on':''}" data-d="${val}"><b>${label}</b><small>${d.getDate()}/${d.getMonth()+1}</small></button>`;
+  }
+  $('days').innerHTML = h;
+  document.querySelectorAll('.day').forEach(b => b.onclick = () => {
+    date = b.dataset.d; $('date').value = date; sel.clear(); renderDays(); listen();
+  });
+}
 $('date').value = date;
-$('date').onchange = e => { if (e.target.value) { date = e.target.value; sel.clear(); listen(); } };
+renderDays();
+$('date').onchange = e => { if (e.target.value) { date = e.target.value; sel.clear(); renderDays(); listen(); } };
 
 // ---- تسجيل الدخول ----
 $('lbtn').onclick = async () => {
@@ -155,7 +178,8 @@ $('lbtn').onclick = async () => {
 $('out').onclick = () => auth.signOut();
 auth.onAuthStateChanged(u => {
   $('login').hidden = !!u; $('app').hidden = !u;
-  if (u && !started) { started = true; start(); }
+  isDriver = !!u && /^driver/i.test(u.email || '');
+  if (u && !started) { started = true; start(); } else if (u) render();
 });
 
 function start() {
@@ -180,9 +204,9 @@ function render() {
   $('tabs').innerHTML = ids.map(id => {
     const free = TOTAL - Object.keys(bookings[id] || {}).length;
     return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vo(id).name)}</b><small>${vo(id).time?esc(vo(id).time)+' · ':''}فاضي ${free}</small></button>`;
-  }).join('') + `<button class="tab add" id="addv"><b>+</b><small>عربية</small></button>`;
+  }).join('') + (isDriver ? '' : `<button class="tab add" id="addv"><b>+</b><small>عربية</small></button>`);
   document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; sel.clear(); render(); });
-  $('addv').onclick = () => vanForm();
+  if (!isDriver) $('addv').onclick = () => vanForm();
 
   if (!van) {
     $('main').innerHTML = `<div class="empty">مفيش عربيات لسه.<br>دوس على + وضيف أول عربية.</div>`;
@@ -195,14 +219,13 @@ function render() {
     h += `<g class="seat ${tk?'taken':''} ${sel.has(n)?'sel':''}" data-s="${n}" transform="translate(${x},${y})">${SEATSHAPE}<text x="34" y="${tk?27:34}" text-anchor="middle" font-size="21">${n}</text>${tk?`<text x="34" y="41" text-anchor="middle" font-size="10">${esc(tk.phone.slice(-4))}</text>`:''}</g>`;
   });
   h += `</svg></div>
-  <p class="info">${sel.size ? 'مختار: ' + [...sel].sort((a,b)=>a-b).join('، ') : 'دوس على الكرسي الفاضي عشان تحجزه'}</p>
-  <p class="vinfo">${vo(van).time?'الميعاد: <b>'+esc(vo(van).time)+'</b>':''}${vo(van).time&&vo(van).driver?' · ':''}${vo(van).driver?'السواق: <b>'+esc(vo(van).driver)+'</b>':''}<br><button id="editv">تعديل بيانات العربية</button></p>
-  <p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="delv">مسح العربية دي</button></p>`;
+  <p class="info">${sel.size ? 'مختار: ' + [...sel].sort((a,b)=>a-b).join('، ') : (isDriver ? 'دوس على الكرسي المحجوز لو الراكب طلب الإلغاء' : 'دوس على الكرسي الفاضي عشان تحجزه')}</p>
+  <p class="vinfo">${vo(van).time?'الميعاد: <b>'+esc(vo(van).time)+'</b>':''}${vo(van).time&&vo(van).driver?' · ':''}${vo(van).driver?'السواق: <b>'+esc(vo(van).driver)+'</b>':''}${isDriver ? '' : '<br><button id="editv">تعديل بيانات العربية</button>'}</p>
+  ${isDriver ? '<p class="info">صلاحيتك: عرض الحجوزات وإلغاء الحجز فقط</p>' : '<p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="delv">مسح العربية دي</button></p>'}`;
   $('main').innerHTML = h;
   document.querySelectorAll('.seat').forEach(el => el.onclick = () => tapSeat(+el.dataset.s));
-  $('delv').onclick = delVan;
-  $('editv').onclick = () => vanForm(van);
-  $('bar').hidden = false;
+  if (!isDriver) { $('delv').onclick = delVan; $('editv').onclick = () => vanForm(van); }
+  $('bar').hidden = isDriver;
   $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8);
 }
 $('phone').oninput = () => $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8);
@@ -210,6 +233,7 @@ $('phone').oninput = () => $('book').disabled = !(sel.size && $('phone').value.r
 function tapSeat(n) {
   const tk = (bookings[van] || {})[n];
   if (tk) return askCancel(n, tk.phone);
+  if (isDriver) return;
   sel.has(n) ? sel.delete(n) : sel.add(n);
   render();
 }
