@@ -12,11 +12,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef1ec;--ink:#16323a;--mute:#5d7178;--free:#ffffff;--freeb:#9db3b8;--sel:#e8a317;--taken:#16323a;--line:#d3dcda;--danger:#b3372b;--ok:#2b7a55}
+:root{--bg:#eef1ec;--ink:#16323a;--mute:#5d7178;--free:#2fa35c;--freeb:#1f7d44;--sel:#e8a317;--taken:#c0392b;--takenb:#8e2a1e;--line:#d3dcda;--danger:#b3372b;--ok:#2b7a55}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 [hidden]{display:none!important}
-button,input{font:inherit}
+button,input,select{font:inherit}
 .top{position:sticky;top:0;background:var(--ink);color:#fff;padding:14px 14px 10px;z-index:5;text-align:center}
 .top h1{font-size:19px;margin:0 0 2px;font-weight:800}
 .top p{margin:0;font-size:12px;color:#c9d6d9}
@@ -39,24 +39,26 @@ button,input{font:inherit}
 .seat .sh,.dseat .sh{fill:rgba(0,0,0,.2)}
 .seat .bk,.seat .hd{fill:url(#gfb);stroke:var(--freeb);stroke-width:1.6}
 .seat .cu{fill:url(#gfc);stroke:var(--freeb);stroke-width:1.6}
-.seat .st,.dseat .st{fill:none;stroke:#c3d0d2;stroke-width:1.4;stroke-dasharray:3 3}
+.seat .st,.dseat .st{fill:none;stroke:#bfe4cd;stroke-width:1.4;stroke-dasharray:3 3}
 .seat.sel .bk,.seat.sel .hd{fill:url(#gsb);stroke:#b97f00}
 .seat.sel .cu{fill:url(#gsc);stroke:#b97f00}
 .seat.sel .st{stroke:#fff3c4}
 .seat.taken{cursor:default}
-.seat.taken .bk,.seat.taken .hd{fill:url(#gtb);stroke:#0b1c21}
-.seat.taken .cu{fill:url(#gtc);stroke:#0b1c21}
-.seat.taken .st{stroke:#5b8896}
+.seat.taken .bk,.seat.taken .hd{fill:url(#gtb);stroke:var(--takenb)}
+.seat.taken .cu{fill:url(#gtc);stroke:var(--takenb)}
+.seat.taken .st{stroke:#f0b3ac}
 .dseat .bk,.dseat .hd,.dseat .cu{fill:#8fa2a8;stroke:#5f747b;stroke-width:1.6}
-.seat text,.dseat text{font-family:Cairo,Tahoma,sans-serif;font-weight:800;fill:var(--ink);pointer-events:none}
-.seat.taken text,.dseat text{fill:#fff}
+.seat text,.dseat text{font-family:Cairo,Tahoma,sans-serif;font-weight:800;fill:#fff;pointer-events:none}
 .legend{display:flex;justify-content:center;gap:16px;font-size:12px;color:var(--mute);margin:10px 0 0}
 .legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:2px solid var(--freeb)}
-.legend i.f{background:#fff}.legend i.s{background:var(--sel);border-color:#b97f00}.legend i.t{background:var(--ink);border-color:#0b1c21}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block;border:2px solid}
+.legend i.f{background:var(--free);border-color:var(--freeb)}
+.legend i.s{background:var(--sel);border-color:#b97f00}
+.legend i.t{background:var(--taken);border-color:var(--takenb)}
 .info{text-align:center;color:var(--mute);font-size:14px;margin:10px 14px 0}
 .empty{text-align:center;padding:40px 20px;color:var(--mute)}
-.bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-bottom));margin-top:16px;display:flex;gap:10px;align-items:center}
+.bar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 14px calc(12px + env(safe-area-inset-bottom));margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.bar select{flex:1 1 100%;min-width:0;padding:12px;border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:16px}
 .bar input{flex:1;min-width:0;padding:12px;border:2px solid var(--line);border-radius:10px;direction:ltr;text-align:right;font-size:18px}
 .btn{border:0;background:var(--ok);color:#fff;font-weight:800;border-radius:10px;padding:12px 18px}
 .btn:disabled{background:#b8c4c6}
@@ -67,19 +69,17 @@ button,input{font:inherit}
 .dlg .ph{font-size:22px;font-weight:800;direction:ltr;margin-bottom:14px}
 .dlg .stack{display:grid;gap:10px}
 .dlg a.btn{display:block;text-decoration:none}
-.dlg .row{display:flex;gap:10px}.dlg .row button{flex:1}
-.dlg .row .btn:first-child{background:#e3e9e7;color:var(--ink)}
 </style>
 </head>
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<linearGradient id="gfb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e1e9e8"/></linearGradient>
-<linearGradient id="gfc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f5f4"/><stop offset="1" stop-color="#cbd7d6"/></linearGradient>
+<linearGradient id="gfb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4cc07e"/><stop offset="1" stop-color="#1f7d44"/></linearGradient>
+<linearGradient id="gfc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fb06e"/><stop offset="1" stop-color="#1c6b3b"/></linearGradient>
 <linearGradient id="gsb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd978"/><stop offset="1" stop-color="#eba91b"/></linearGradient>
 <linearGradient id="gsc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7c443"/><stop offset="1" stop-color="#d6900a"/></linearGradient>
-<linearGradient id="gtb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#33606f"/><stop offset="1" stop-color="#173540"/></linearGradient>
-<linearGradient id="gtc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#274f5d"/><stop offset="1" stop-color="#102830"/></linearGradient>
+<linearGradient id="gtb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e05545"/><stop offset="1" stop-color="#a5291c"/></linearGradient>
+<linearGradient id="gtc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d14636"/><stop offset="1" stop-color="#8e2a1e"/></linearGradient>
 </defs></svg>
 
 <div class="top">
@@ -88,8 +88,15 @@ button,input{font:inherit}
 </div>
 <div class="days" id="days"></div>
 <div class="tabs" id="tabs"></div>
+<div class="tabs" id="trips"></div>
 <div id="main"></div>
 <div class="bar" id="bar" hidden>
+  <select id="pickup">
+    <option value="" disabled selected>منطقة الركوب</option>
+    <option>الشهداء</option><option>شمياطس</option><option>الساحل</option><option>دراجيل</option>
+    <option>كفر الشيخ</option><option>الهجارسة</option><option>كوبري العيلة</option><option>العزبة الحمراء</option>
+    <option>كفر ربيع</option><option>طنوب الحطيم</option><option>العوايشة</option><option>مشلة</option>
+  </select>
   <input id="phone" type="tel" inputmode="tel" placeholder="رقم تليفونك">
   <button class="btn" id="book" disabled>احجز</button>
 </div>
@@ -112,41 +119,14 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
-let date = '', van = null, vans = {}, avail = {}, sel = new Set(), refA = null;
+let date = '', van = null, trip = null, vans = {}, avail = {}, sel = new Set(), refA = null;
 
-const SEAT = '<svg viewBox="0 0 64 72"><ellipse class="sh" cx="32" cy="67" rx="25" ry="4"/><rect class="ar" x="3" y="30" width="12" height="34" rx="6"/><rect class="ar" x="49" y="30" width="12" height="34" rx="6"/><rect class="hd" x="19" y="2" width="26" height="15" rx="7.5"/><rect class="bk" x="9" y="11" width="46" height="44" rx="15"/><rect class="st" x="17" y="19" width="30" height="28" rx="10"/><rect class="cu" x="6" y="46" width="52" height="19" rx="9"/><path class="hl" d="M14 51h36"/></svg>';
-const SEATSHAPE = '<rect class="sh" x="3" y="6" width="66" height="76" rx="14"/><rect class="cu" x="2" y="2" width="64" height="50" rx="13"/><rect class="st" x="10" y="8" width="48" height="38" rx="9"/><rect class="bk" x="0" y="46" width="68" height="26" rx="11"/><rect class="hd" x="20" y="66" width="28" height="12" rx="6"/>';
-const WHEEL = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4"><circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="5" fill="currentColor"/><path d="M10 32h17M37 32h17M32 37v19"/></svg>';
-let VAN_TOP = '';
-(function(){
-  const rowsY=[255,350,445,540]; let wins='';
-  [150,...rowsY].forEach(y=>{
-    wins+=`<rect x="33" y="${y+6}" width="6" height="64" rx="3" fill="url(#vg)" stroke="#16323a" stroke-width="1"/>`;
-    wins+=`<rect x="281" y="${y+6}" width="6" height="64" rx="3" fill="url(#vg)" stroke="#16323a" stroke-width="1"/>`;
-  });
-  VAN_TOP = '<svg viewBox="0 0 320 690" xmlns="http://www.w3.org/2000/svg">'+
-  '<defs><linearGradient id="vb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f7f6"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#c9d3d1"/></linearGradient>'+
-  '<linearGradient id="vf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfd7d5"/><stop offset="1" stop-color="#b9c4c1"/></linearGradient>'+
-  '<linearGradient id="vg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6f1f4"/><stop offset="1" stop-color="#9dbfcb"/></linearGradient></defs>'+
-  '<ellipse cx="160" cy="672" rx="128" ry="12" fill="rgba(0,0,0,.22)"/>'+
-  '<rect x="14" y="118" width="22" height="64" rx="8" fill="#20282b"/><rect x="284" y="118" width="22" height="64" rx="8" fill="#20282b"/>'+
-  '<rect x="14" y="500" width="22" height="64" rx="8" fill="#20282b"/><rect x="284" y="500" width="22" height="64" rx="8" fill="#20282b"/>'+
-  '<rect x="4" y="96" width="26" height="13" rx="6" fill="#20282b"/><rect x="290" y="96" width="26" height="13" rx="6" fill="#20282b"/>'+
-  '<path d="M30 92 Q30 24 104 20 L216 20 Q290 24 290 92 L290 636 Q290 664 262 664 L58 664 Q30 664 30 636 Z" fill="url(#vb)" stroke="#16323a" stroke-width="3"/>'+
-  '<ellipse cx="160" cy="48" rx="86" ry="14" fill="#fff" opacity=".65"/>'+
-  '<rect x="58" y="26" width="34" height="10" rx="5" fill="#ffd25a" stroke="#16323a" stroke-width="1.5"/><rect x="228" y="26" width="34" height="10" rx="5" fill="#ffd25a" stroke="#16323a" stroke-width="1.5"/>'+
-  '<path d="M58 90 Q160 52 262 90 L252 112 Q160 82 68 112 Z" fill="url(#vg)" stroke="#16323a" stroke-width="2.5"/>'+
-  '<rect x="42" y="112" width="236" height="540" rx="12" fill="url(#vf)" stroke="#16323a" stroke-width="2"/>'+
-  '<rect x="42" y="112" width="236" height="26" rx="10" fill="#33424a"/>'+
-  '<circle cx="83" cy="126" r="12" fill="none" stroke="#e3eaec" stroke-width="3.5"/><circle cx="83" cy="126" r="3" fill="#e3eaec"/><path d="M71 126h9M86 126h9M83 130v8" stroke="#e3eaec" stroke-width="3"/>'+
-  wins+
-  '<rect x="278" y="250" width="12" height="192" fill="none" stroke="#16323a" stroke-width="1.5" stroke-dasharray="5 4"/><rect x="292" y="330" width="4" height="26" rx="2" fill="#16323a"/>'+
-  '<rect x="36" y="638" width="16" height="10" rx="4" fill="#d24a3c"/><rect x="268" y="638" width="16" height="10" rx="4" fill="#d24a3c"/>'+
-  '<g transform="translate(49,150)">'+SEATSHAPE+'<text x="34" y="33" text-anchor="middle" font-size="11" font-family="Cairo,Tahoma,sans-serif" fill="var(--mute)">السواق</text></g>';
-})();
-const SEATPOS = [[1,127,150],[2,205,150],[3,49,255],[4,127,255],[5,205,255],[6,49,350],[7,127,350],[8,205,350],[9,49,445],[10,127,445],[11,205,445],[12,49,540],[13,127,540],[14,205,540]];
 const TOTAL = 14;
-const vo = id => { const v = vans[id]; return (v && typeof v === 'object') ? v : { name: v || '' }; };
+const SEATSHAPE = "<rect class=\"sh\" x=\"3\" y=\"6\" width=\"66\" height=\"76\" rx=\"14\"/><rect class=\"cu\" x=\"2\" y=\"2\" width=\"64\" height=\"50\" rx=\"13\"/><rect class=\"st\" x=\"10\" y=\"8\" width=\"48\" height=\"38\" rx=\"9\"/><rect class=\"bk\" x=\"0\" y=\"46\" width=\"68\" height=\"26\" rx=\"11\"/><rect class=\"hd\" x=\"20\" y=\"66\" width=\"28\" height=\"12\" rx=\"6\"/>";
+const VAN_TOP = "<svg viewBox=\"0 0 320 690\" xmlns=\"http://www.w3.org/2000/svg\"><defs><linearGradient id=\"vb\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#f4f7f6\"/><stop offset=\".5\" stop-color=\"#ffffff\"/><stop offset=\"1\" stop-color=\"#c9d3d1\"/></linearGradient><linearGradient id=\"vf\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#cfd7d5\"/><stop offset=\"1\" stop-color=\"#b9c4c1\"/></linearGradient><linearGradient id=\"vg\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e6f1f4\"/><stop offset=\"1\" stop-color=\"#9dbfcb\"/></linearGradient></defs><ellipse cx=\"160\" cy=\"672\" rx=\"128\" ry=\"12\" fill=\"rgba(0,0,0,.22)\"/><rect x=\"14\" y=\"118\" width=\"22\" height=\"64\" rx=\"8\" fill=\"#20282b\"/><rect x=\"284\" y=\"118\" width=\"22\" height=\"64\" rx=\"8\" fill=\"#20282b\"/><rect x=\"14\" y=\"500\" width=\"22\" height=\"64\" rx=\"8\" fill=\"#20282b\"/><rect x=\"284\" y=\"500\" width=\"22\" height=\"64\" rx=\"8\" fill=\"#20282b\"/><rect x=\"4\" y=\"96\" width=\"26\" height=\"13\" rx=\"6\" fill=\"#20282b\"/><rect x=\"290\" y=\"96\" width=\"26\" height=\"13\" rx=\"6\" fill=\"#20282b\"/><path d=\"M30 92 Q30 24 104 20 L216 20 Q290 24 290 92 L290 636 Q290 664 262 664 L58 664 Q30 664 30 636 Z\" fill=\"url(#vb)\" stroke=\"#16323a\" stroke-width=\"3\"/><ellipse cx=\"160\" cy=\"48\" rx=\"86\" ry=\"14\" fill=\"#fff\" opacity=\".65\"/><rect x=\"58\" y=\"26\" width=\"34\" height=\"10\" rx=\"5\" fill=\"#ffd25a\" stroke=\"#16323a\" stroke-width=\"1.5\"/><rect x=\"228\" y=\"26\" width=\"34\" height=\"10\" rx=\"5\" fill=\"#ffd25a\" stroke=\"#16323a\" stroke-width=\"1.5\"/><path d=\"M58 90 Q160 52 262 90 L252 112 Q160 82 68 112 Z\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"2.5\"/><rect x=\"42\" y=\"112\" width=\"236\" height=\"540\" rx=\"12\" fill=\"url(#vf)\" stroke=\"#16323a\" stroke-width=\"2\"/><rect x=\"42\" y=\"112\" width=\"236\" height=\"26\" rx=\"10\" fill=\"#33424a\"/><circle cx=\"83\" cy=\"126\" r=\"12\" fill=\"none\" stroke=\"#e3eaec\" stroke-width=\"3.5\"/><circle cx=\"83\" cy=\"126\" r=\"3\" fill=\"#e3eaec\"/><path d=\"M71 126h9M86 126h9M83 130v8\" stroke=\"#e3eaec\" stroke-width=\"3\"/><rect x=\"33\" y=\"156\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"281\" y=\"156\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"33\" y=\"261\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"281\" y=\"261\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"33\" y=\"356\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"281\" y=\"356\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"33\" y=\"451\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"281\" y=\"451\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"33\" y=\"546\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"281\" y=\"546\" width=\"6\" height=\"64\" rx=\"3\" fill=\"url(#vg)\" stroke=\"#16323a\" stroke-width=\"1\"/><rect x=\"278\" y=\"250\" width=\"12\" height=\"192\" fill=\"none\" stroke=\"#16323a\" stroke-width=\"1.5\" stroke-dasharray=\"5 4\"/><rect x=\"292\" y=\"330\" width=\"4\" height=\"26\" rx=\"2\" fill=\"#16323a\"/><rect x=\"36\" y=\"638\" width=\"16\" height=\"10\" rx=\"4\" fill=\"#d24a3c\"/><rect x=\"268\" y=\"638\" width=\"16\" height=\"10\" rx=\"4\" fill=\"#d24a3c\"/><g transform=\"translate(49,150)\"><rect class=\"sh\" x=\"3\" y=\"6\" width=\"66\" height=\"76\" rx=\"14\"/><rect class=\"cu\" x=\"2\" y=\"2\" width=\"64\" height=\"50\" rx=\"13\"/><rect class=\"st\" x=\"10\" y=\"8\" width=\"48\" height=\"38\" rx=\"9\"/><rect class=\"bk\" x=\"0\" y=\"46\" width=\"68\" height=\"26\" rx=\"11\"/><rect class=\"hd\" x=\"20\" y=\"66\" width=\"28\" height=\"12\" rx=\"6\"/><text x=\"34\" y=\"33\" text-anchor=\"middle\" font-size=\"11\" font-family=\"Cairo,Tahoma,sans-serif\" fill=\"var(--mute)\">السواق</text></g>";
+const SEATPOS = [[1,127,150],[2,205,150],[3,49,255],[4,127,255],[5,205,255],[6,49,350],[7,127,350],[8,205,350],[9,49,445],[10,127,445],[11,205,445],[12,49,540],[13,127,540],[14,205,540]];
+const vo = id => vans[id] || {};
+const trips = id => vo(id).trips || {};
 const intl = p => { let d = String(p).replace(/\D/g,''); if (d.startsWith('00')) d = d.slice(2); else if (d.startsWith('0')) d = '20' + d.slice(1); return d; };
 const wa = (n, m) => `https://wa.me/${intl(n)}?text=${encodeURIComponent(m)}`;
 
@@ -169,25 +149,37 @@ renderDays();
 db.ref('vans').on('value', s => {
   vans = s.val() || {};
   if (!van || !vans[van]) van = Object.keys(vans)[0] || null;
+  if (van) { const tk = Object.keys(trips(van)); if (!trip || !trips(van)[trip]) trip = tk[0] || null; }
   sel.clear(); render();
 });
 function listen() {
   if (refA) refA.off();
   refA = db.ref('avail/' + date);
-  refA.on('value', s => { avail = s.val() || {}; sel.forEach(n => { if ((avail[van]||{})[n]) sel.delete(n); }); render(); });
+  refA.on('value', s => { avail = s.val() || {}; sel.forEach(n => { if (((avail[van]||{})[trip]||{})[n]) sel.delete(n); }); render(); });
 }
 listen();
 
 function render() {
   const ids = Object.keys(vans);
   $('tabs').innerHTML = ids.map(id => {
-    const a = avail[id] || {}, free = TOTAL - Object.keys(a).length;
-    return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vo(id).name)}</b><small>${vo(id).time?esc(vo(id).time)+' · ':''}فاضي ${free}</small></button>`;
+    let free = 0, cap = 0;
+    Object.keys(trips(id)).forEach(tid => { cap += TOTAL; free += TOTAL - Object.keys(((avail[id]||{})[tid])||{}).length; });
+    return `<button class="tab ${id===van?'on':''}" data-v="${id}"><b>${esc(vo(id).name)}</b><small>${cap?('فاضي '+free):'من غير رحلات'}</small></button>`;
   }).join('');
-  document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; sel.clear(); render(); });
+  document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; const tk=Object.keys(trips(van)); trip=tk[0]||null; sel.clear(); render(); });
 
-  if (!van) { $('main').innerHTML = `<div class="empty">مفيش عربيات متاحة دلوقتي.</div>`; $('bar').hidden = true; return; }
-  const a = avail[van] || {}, v = vo(van);
+  if (!van) { $('main').innerHTML = `<div class="empty">مفيش عربيات متاحة دلوقتي.</div>`; $('bar').hidden = true; $('trips').innerHTML=''; return; }
+
+  const tobj = trips(van), tids = Object.keys(tobj);
+  $('trips').innerHTML = tids.map(tid => {
+    const free = TOTAL - Object.keys(((avail[van]||{})[tid])||{}).length;
+    return `<button class="tab ${tid===trip?'on':''}" data-t="${tid}"><b>${esc(tobj[tid].label||tobj[tid].time)}</b><small>${esc(tobj[tid].time||'')} · فاضي ${free}</small></button>`;
+  }).join('');
+  document.querySelectorAll('.tab[data-t]').forEach(b => b.onclick = () => { trip = b.dataset.t; sel.clear(); render(); });
+
+  if (!trip) { $('main').innerHTML = `<div class="empty">مفيش رحلات متاحة للعربية دي دلوقتي.</div>`; $('bar').hidden = true; return; }
+
+  const a = (avail[van] || {})[trip] || {}, v = vo(van), tb = tobj[trip] || {};
   let h = `<div class="vanwrap">` + VAN_TOP;
   SEATPOS.forEach(([n, x, y]) => {
     const tk = a[n];
@@ -195,50 +187,54 @@ function render() {
   });
   h += `</svg></div>
   <div class="legend"><span><i class="f"></i>فاضي</span><span><i class="s"></i>مختار</span><span><i class="t"></i>محجوز</span></div>
-  <p class="info">${v.driver ? 'السواق: ' + esc(v.driver) : ''}${sel.size ? '<br>مختار: ' + [...sel].sort((x,y)=>x-y).join('، ') : (v.driver?'':'دوس على كرسي فاضي عشان تختاره')}</p>`;
+  <p class="info"><b>${esc(tb.label||'')}</b>${tb.time?' · '+esc(tb.time):''}${v.driver ? ' · السواق: ' + esc(v.driver) : ''}<br>${sel.size ? 'مختار: ' + [...sel].sort((x,y)=>x-y).join('، ') : 'دوس على كرسي فاضي عشان تختاره'}</p>`;
   $('main').innerHTML = h;
   document.querySelectorAll('.seat').forEach(el => el.onclick = () => tapSeat(+el.dataset.s));
   $('bar').hidden = false;
   checkBtn();
 }
-function checkBtn() { $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8); }
+function checkBtn() { $('book').disabled = !(sel.size && $('phone').value.replace(/\D/g,'').length >= 8 && $('pickup').value); }
 $('phone').oninput = checkBtn;
+$('pickup').onchange = checkBtn;
 
 function tapSeat(n) {
-  if ((avail[van] || {})[n]) return;
+  if (((avail[van]||{})[trip]||{})[n]) return;
   sel.has(n) ? sel.delete(n) : sel.add(n);
   render();
 }
 
 $('book').onclick = async () => {
-  const phone = $('phone').value.replace(/\s/g, '');
+  const phone = $('phone').value.replace(/\s/g, ''), pickup = $('pickup').value;
   const seats = [...sel], ok = [], failed = [];
   $('book').disabled = true;
   for (const n of seats) {
     try {
-      const r = await db.ref(`avail/${date}/${van}/${n}`).transaction(cur => cur ? undefined : true);
-      if (r.committed) { await db.ref(`bookings/${date}/${van}/${n}`).set({ phone, at: firebase.database.ServerValue.TIMESTAMP }); ok.push(n); }
+      const r = await db.ref(`avail/${date}/${van}/${trip}/${n}`).transaction(cur => cur ? undefined : true);
+      if (r.committed) { await db.ref(`bookings/${date}/${van}/${trip}/${n}`).set({ phone, pickup, at: firebase.database.ServerValue.TIMESTAMP }); ok.push(n); }
       else failed.push(n);
     } catch (e) { failed.push(n); }
   }
   sel.clear(); render();
-  if (ok.length) showDone(phone, ok);
+  if (ok.length) showDone(phone, pickup, ok);
   else if (failed.length) alert('الكراسي دي اتحجزت قبلك: ' + failed.join('، '));
 };
 
-function showDone(phone, seats) {
-  const v = vo(van), list = seats.sort((a,b)=>a-b).join('، '), w = seats.length > 1 ? 'الكراسي' : 'الكرسي';
+function showDone(phone, pickup, seats) {
+  const v = vo(van), tb = trips(van)[trip] || {}, list = seats.sort((a,b)=>a-b).join('، '), w = seats.length > 1 ? 'الكراسي' : 'الكرسي';
   const d = $('dlg');
-  let body = `<p>تم الحجز ✅</p><p class="ph">${w} رقم ${list}</p><p style="color:var(--mute);font-size:14px;margin-top:-8px">${esc(v.name)}${v.time?' · '+esc(v.time):''} · ${date}</p>`;
+  let body = `<p>تم الحجز ✅</p><p class="ph">${w} رقم ${list}</p><p style="color:var(--mute);font-size:14px;margin-top:-8px">${esc(v.name)} · ${esc(tb.label||'')} ${esc(tb.time||'')} · ${date}<br>منطقة الركوب: ${esc(pickup)}</p>`;
   if (v.ownerPhone) {
-    const msg = `حجز جديد - ${v.name} - ${date}${v.time?' '+v.time:''} - ${w} ${list} - تليفون الراكب ${phone}`;
-    body += `<div class="stack"><a class="btn wa" target="_blank" rel="noopener" href="${wa(v.ownerPhone, msg)}">تأكيد الحجز مع صاحب العربية (واتساب)</a><button class="btn" id="dn" style="background:#e3e9e7;color:var(--ink)">تم</button></div>`;
+    const msg = `حجز جديد - ${v.name} - ${tb.label||''} ${tb.time||''} - ${date} - ${w} ${list} - منطقة الركوب ${pickup} - تليفون الراكب ${phone}`;
+    body += `<p style="color:var(--danger);font-size:13px">لازم تدوس تأكيد وترسل الرسالة عشان يوصل صاحب العربية</p>
+      <div class="stack"><a class="btn wa" target="_blank" rel="noopener" id="waL" href="${wa(v.ownerPhone, msg)}">تأكيد الحجز مع صاحب العربية (واتساب)</a>
+      <button class="btn" id="dn" disabled style="background:#b8c4c6">تم الإرسال</button></div>`;
   } else {
-    body += `<button class="btn" id="dn" style="width:100%">تم</button>`;
+    body += `<p style="color:var(--danger);font-size:13px">صاحب العربية لسه ما سجّلش رقمه، كلّم السواق تليفونيًا لتأكيد الحجز.</p><button class="btn" id="dn" style="width:100%">تم</button>`;
   }
   d.innerHTML = `<div>${body}</div>`;
   d.hidden = false;
-  $('dn').onclick = () => { d.hidden = true; $('phone').value = ''; };
+  if ($('waL')) $('waL').onclick = () => { $('dn').disabled = false; $('dn').style.background = '#e3e9e7'; };
+  $('dn').onclick = () => { d.hidden = true; $('phone').value = ''; $('pickup').value = ''; };
 }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 </script>
