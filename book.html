@@ -147,7 +147,8 @@ date = ymd(new Date());
 renderDays();
 
 db.ref('vans').on('value', s => {
-  vans = s.val() || {};
+  const raw = s.val() || {}; vans = {};
+  Object.keys(raw).forEach(k => { if (raw[k] && typeof raw[k] === 'object') vans[k] = raw[k]; });
   if (!van || !vans[van]) van = Object.keys(vans)[0] || null;
   if (van) { const tk = Object.keys(trips(van)); if (!trip || !trips(van)[trip]) trip = tk[0] || null; }
   sel.clear(); render();
