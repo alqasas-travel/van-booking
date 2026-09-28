@@ -194,7 +194,8 @@ auth.onAuthStateChanged(u => {
 
 function start() {
   db.ref('vans').on('value', s => {
-    vans = s.val() || {};
+    const raw = s.val() || {}; vans = {};
+    Object.keys(raw).forEach(k => { if (raw[k] && typeof raw[k] === 'object') vans[k] = raw[k]; });
     if (!van || !vans[van]) van = Object.keys(vans)[0] || null;
     if (van) { const tk = Object.keys(trips(van)); if (!trip || !trips(van)[trip]) trip = tk[0] || null; }
     sel.clear(); render();
@@ -218,7 +219,7 @@ function render() {
   document.querySelectorAll('.tab[data-v]').forEach(b => b.onclick = () => { van = b.dataset.v; const tk=Object.keys(trips(van)); trip = tk[0]||null; sel.clear(); render(); });
   if (!isDriver) $('addv').onclick = () => vanForm();
 
-  if (!van) { $('main').innerHTML = `<div class="empty">مفيش عربيات لسه.<br>دوس على + وضيف أول عربية.</div>`; $('bar').hidden = true; $('trips').innerHTML=''; renderSummary(); return; }
+  if (!van) { $('main').innerHTML = `<div class="empty">مفيش عربيات لسه.<br>دوس على + وضيف أول عربية.</div>` + (isDriver ? '' : `<div style="text-align:center"><button class="btn" id="quick">إعداد سريع: عربية + 3 رحلات</button></div>`); if (!isDriver) $('quick').onclick = resetAll; $('bar').hidden = true; $('trips').innerHTML=''; renderSummary(); return; }
 
   const tobj = trips(van), tids = Object.keys(tobj);
   $('trips').innerHTML = tids.map(tid => {
@@ -229,7 +230,8 @@ function render() {
   if (!isDriver) $('addt').onclick = () => tripForm();
 
   if (!trip) {
-    $('main').innerHTML = `<div class="empty">العربية دي مفيهاش رحلات لسه.${isDriver?'':'<br>دوس على + رحلة وضيف ميعاد.'}</div>`;
+    $('main').innerHTML = `<div class="empty">العربية دي مفيهاش رحلات لسه.${isDriver?'':'<br>دوس على + رحلة وضيف ميعاد.'}</div>` + (isDriver ? '' : `<p class="vinfo"><button id="editv">تعديل بيانات العربية</button></p><p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="delv">مسح العربية دي</button></p>`);
+    if (!isDriver) { $('delv').onclick = delVan; $('editv').onclick = () => vanForm(van); }
     $('bar').hidden = true; renderSummary(); return;
   }
 
@@ -267,7 +269,8 @@ function renderSummary() {
       });
     });
   });
-  $('summary').innerHTML = `<h3>كل حجوزات اليوم (${date})</h3>` + (rows || '<p class="info" style="margin:0">مفيش حجوزات النهارده لسه</p>') + rows;
+  $('summary').innerHTML = `<h3>كل حجوزات اليوم (${date})</h3>` + (rows || '<p class="info" style="margin:0">مفيش حجوزات في اليوم ده لسه</p>') + (isDriver ? '' : '<p class="info"><button style="border:0;background:none;color:var(--danger);text-decoration:underline" id="resetall">إعادة ضبط كاملة (مسح كل شيء والبدء من الأول)</button></p>');
+  if (!isDriver && $('resetall')) $('resetall').onclick = resetAll;
 }
 
 function tapSeat(n) {
@@ -393,6 +396,20 @@ function showDone(phone, seats, cancelled) {
   }
 }
 
+async function resetAll() {
+  if (!confirm('ده هيمسح كل العربيات والرحلات والحجوزات الحالية، ويبدأ من الأول بعربية و3 رحلات. متأكد؟')) return;
+  try {
+    const vk = db.ref('vans').push().key, k1 = db.ref('vans').push().key, k2 = db.ref('vans').push().key, k3 = db.ref('vans').push().key;
+    const trips3 = {};
+    trips3[k1] = { label: 'ذهاب 1 ظهرًا', time: '1:00 ظهرًا' };
+    trips3[k2] = { label: 'ذهاب 7 مساءً', time: '7:00 مساءً' };
+    trips3[k3] = { label: 'عودة من الإسكندرية', time: '4:00 عصرًا' };
+    const obj = {}; obj[vk] = { name: 'عربية 1', driver: 'ابراهيم القصاص', driverPhone: '', ownerPhone: '01064679668', trips: trips3 };
+    await db.ref('bookings').remove(); await db.ref('avail').remove(); await db.ref('vans').set(obj);
+    van = vk; trip = k1;
+    alert('تم الإعداد ✅ اتضافت عربية 1 مع 3 رحلات. تقدر تعدّل بياناتها من "تعديل بيانات العربية".');
+  } catch (e) { alert('ماقدرش يكمل: ' + (e.code || e.message) + '\nتأكد إنك داخل بحساب الموظف وإن القواعد اتحدّثت.'); }
+}
 function delVan() {
   if (confirm('تمسح ' + vo(van).name + ' وكل رحلاتها وحجوزاتها؟')) {
     const id = van; van = null; trip = null;
