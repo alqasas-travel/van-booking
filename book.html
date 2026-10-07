@@ -11,6 +11,7 @@
 <title>رحلات القصاص - حجز مقعد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#eef1ec;--ink:#16323a;--mute:#5d7178;--free:#2fa35c;--freeb:#1f7d44;--sel:#e8a317;--taken:#c0392b;--takenb:#8e2a1e;--line:#d3dcda;--danger:#b3372b;--ok:#2b7a55}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -69,6 +70,15 @@ button,input,select{font:inherit}
 .dlg .ph{font-size:22px;font-weight:800;direction:ltr;margin-bottom:14px}
 .dlg .stack{display:grid;gap:10px}
 .dlg a.btn{display:block;text-decoration:none}
+.toptrack{max-width:380px;margin:0 auto;padding:0 14px 10px;text-align:center}
+.toptrack .btn{width:100%;background:#2563a8}
+.btn.map{background:#2563a8}
+.mapdlg{position:fixed;inset:0;background:#0009;z-index:10;display:flex;align-items:center;justify-content:center}
+.mapdlg .box{background:#fff;width:94%;max-width:420px;border-radius:14px;overflow:hidden}
+.mapdlg .hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--ink);color:#fff}
+.mapdlg .hd button{border:0;background:none;color:#fff;font-size:18px}
+#mapbox{height:320px;width:100%}
+.mapdlg .st{padding:8px 14px;font-size:13px;color:var(--mute);text-align:center}
 </style>
 </head>
 <body>
@@ -86,6 +96,7 @@ button,input,select{font:inherit}
   <h1>رحلات القصاص</h1>
   <p>احجز كرسيك بنفسك</p>
 </div>
+<div class="toptrack" id="toptrack" hidden><button class="btn" id="tracklast">تتبع آخر رحلة حجزتها</button></div>
 <div class="days" id="days"></div>
 <div class="tabs" id="tabs"></div>
 <div class="tabs" id="trips"></div>
@@ -102,7 +113,9 @@ button,input,select{font:inherit}
 </div>
 
 <div class="dlg" id="dlg" hidden></div>
+<div class="mapdlg" id="mapdlg" hidden><div class="box"><div class="hd"><span>تتبع العربية</span><button id="mapclose">✕</button></div><div id="mapbox"></div><div class="st" id="mapst"></div></div></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
@@ -120,6 +133,7 @@ const db = firebase.database();
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
 let date = '', van = null, trip = null, vans = {}, avail = {}, sel = new Set(), refA = null;
+let leafMap = null, liveRef = null;
 
 const TOTAL = 14;
 const SEATSHAPE = "<rect class=\"sh\" x=\"3\" y=\"6\" width=\"66\" height=\"76\" rx=\"14\"/><rect class=\"cu\" x=\"2\" y=\"2\" width=\"64\" height=\"50\" rx=\"13\"/><rect class=\"st\" x=\"10\" y=\"8\" width=\"48\" height=\"38\" rx=\"9\"/><rect class=\"bk\" x=\"0\" y=\"46\" width=\"68\" height=\"26\" rx=\"11\"/><rect class=\"hd\" x=\"20\" y=\"66\" width=\"28\" height=\"12\" rx=\"6\"/>";
@@ -232,11 +246,47 @@ function showDone(phone, pickup, seats) {
   } else {
     body += `<p style="color:var(--danger);font-size:13px">صاحب العربية لسه ما سجّلش رقمه، كلّم السواق تليفونيًا لتأكيد الحجز.</p><button class="btn" id="dn" style="width:100%">تم</button>`;
   }
+  localStorage.setItem('lastTrip', JSON.stringify({ date, van, trip, at: Date.now() }));
+  body += `<button class="btn map" id="tnow" style="margin-top:10px">تتبع العربية دلوقتي</button>`;
   d.innerHTML = `<div>${body}</div>`;
   d.hidden = false;
   if ($('waL')) $('waL').onclick = () => { $('dn').disabled = false; $('dn').style.background = '#e3e9e7'; };
   $('dn').onclick = () => { d.hidden = true; $('phone').value = ''; $('pickup').value = ''; };
+  $('tnow').onclick = () => openTrack(date, van, trip);
+  showTopTrack();
 }
+function showTopTrack() {
+  const saved = localStorage.getItem('lastTrip');
+  const bar = $('toptrack');
+  if (!saved) { bar.hidden = true; return; }
+  bar.hidden = false;
+  $('tracklast').onclick = () => { const t = JSON.parse(saved); openTrack(t.date, t.van, t.trip); };
+}
+showTopTrack();
+
+function openTrack(d0, v0, tp0) {
+  const d = $('mapdlg'); d.hidden = false;
+  setTimeout(() => {
+    if (!leafMap) leafMap = L.map('mapbox');
+    else leafMap.eachLayer(l => leafMap.removeLayer(l));
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(leafMap);
+    leafMap.setView([30.5,31.0], 7);
+    if (liveRef) liveRef.off();
+    liveRef = db.ref(`live/${d0}/${v0}/${tp0}`);
+    let marker = null;
+    liveRef.on('value', s => {
+      const p = s.val();
+      if (!p) { $('mapst').textContent = 'الرحلة لسه مبدأتش، السواق لما يبدأ هيظهر هنا'; return; }
+      $('mapst').textContent = 'بتتحدث كل شوية';
+      if (!marker) marker = L.marker([p.lat, p.lng]).addTo(leafMap);
+      else marker.setLatLng([p.lat, p.lng]);
+      leafMap.setView([p.lat, p.lng], 14);
+      leafMap.invalidateSize();
+    });
+  }, 50);
+}
+$('mapclose').onclick = () => { $('mapdlg').hidden = true; if (liveRef) { liveRef.off(); liveRef = null; } };
+
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 </script>
 </body>
